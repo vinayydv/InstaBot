@@ -13,6 +13,26 @@ def self_info():
     request_url = BASE_URL + "users/self/?access_token=%s"%ACCESS_TOKEN
     user_info = requests.get(request_url)
     user_info = user_info.json()
+
+    '''
+    if status code is 200
+        if data is not empty
+            print username
+            print No of followers
+            print No of people following
+            Print number of media files    
+    '''
+    if user_info['meta']['code'] == 200:
+        if len(user_info['data']):
+            print "My username is %s" % user_info['data']['username']
+            print "My number of followers is %s" % user_info['data']['counts']['followed_by']
+            print "I am following %s persons" % user_info['data']['counts']['follows']
+            print "I have made %s posts" % user_info['data']['counts']['media']
+            print "Successfully fetched"
+        else:
+            print "No user found"
+    else:
+        print "Status code other than 200"
     return user_info
 
 
