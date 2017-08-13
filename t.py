@@ -113,21 +113,49 @@ def get_own_post():
     :return:
     '''
     request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % ACCESS_TOKEN
-    print 'GET request url : %s' % request_url
+    print 'GET request url for my own info : %s' % request_url
     own_media = requests.get(request_url).json()
     if own_media['meta']['code'] == 200:
         if len(own_media['data']):
+
+            '''
+            If you want to download your own post
+            '''
+
             own_post_id = own_media['data'][0]['id']
             print 'My own post id is %s' % own_post_id
             image_name = own_media['data'][0]['id'] + '.jpeg'
             image_url = own_media['data'][0]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url, image_name)
-            print 'Your post is downloaded.'
+            print 'Your recent post is downloaded.'
+
+
+            '''
+            If you want to download the post with most number of comments 
+            '''
+
+            question = raw_input("Do you want to know the post with most number of comments? (Y, N) ")
+            if question.upper() == "Y":
+                num_comments = 0
+                '''
+                loop to get the post with most number of comments
+                '''
+                for a in range(len(own_media['data'])):
+                    if own_media['data'][a]['comments']['count'] >= num_comments:
+                        num_comments = own_media['data'][a]['comments']['count']
+                        number = a
+
+                image_url = own_media['data'][number]['images']['standard_resolution']['url']
+                print image_url
+                post_id = own_media['data'][number]['id']
+                print 'Post id of the post with most number of comments is %s ' % post_id
+
         else:
             print 'Post does not exist!'
     else:
         print 'Status code other than 200 received!'
 
+    return own_post_id
 
 
 #function to get other users post
@@ -152,17 +180,84 @@ def get_users_post(insta_username):
 
     if user_media['meta']['code'] == 200:
         if len(user_media['data']):
+            '''
+             If you want to download your own post
+            '''
+
             user_post_id = user_media['data'][0]['id']
             print 'User post id is %s' % user_post_id
             image_name = user_media['data'][0]['id'] + '.jpeg'
             image_url = user_media['data'][0]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url, image_name)
+            print 'Image url for recent post is %s ' % image_url
             print 'User post is downloaded.'
+
+            '''
+             If you want to download the post with most number of comments 
+            '''
+
+            question = raw_input("Do you want to download the post with most number of likes? (Y, N) ")
+            if question.upper() == "Y":
+                num_likes = 0
+
+                '''
+                loop to get the post with most number of comments
+                '''
+
+                for a in range(len(user_media['data'])):
+                    if user_media['data'][a]['likes']['count'] >= num_likes:
+                        num_likes = user_media['data'][a]['likes']['count']
+                        number = a
+
+                image_url = user_media['data'][number]['images']['standard_resolution']['url']
+                print image_url
+                post_id = user_media['data'][number]['id']
+                print 'Post id of the post with most number of comments is %s ' % post_id
+
         else:
             print "There is no recent post!"
     else:
         print "Status code other than 200 received!"
-    return None
+    return user_post_id
+
+
+#Fucntion to get recent media liked by user
+
+
+def get_recent_media():
+
+
+    '''
+    Make request url
+    Get data through get
+     Read json data through url
+     return json data
+    '''
+    request_url = BASE_URL + "users/self/media/liked?access_token=%s" % ACCESS_TOKEN
+    print 'Request url for recent media liked is ' + request_url
+    user_info = requests.get(request_url)
+    user_info = user_info.json()
+
+    '''
+    if status code is 200
+        if data is not empty
+            print required info   
+    '''
+    if user_info['meta']['code'] == 200:
+        if len(user_info['data']):
+            image_url = user_info['data'][0]['images']['standard_resolution']['url']
+            print 'Url of the media recently liked by the user is %s ' % image_url
+            post_id = user_info['data'][0]['id']
+            print 'Post id of the recently liked by the user is %s ' % post_id
+            return post_id
+            return user_info['data'][0]['id']
+
+        else:
+            print "No user found"
+    else:
+        print "Status code other than 200"
+        exit()
+    return user_info
 
 
 #function to start insta_bot
@@ -181,6 +276,8 @@ def start_bot():
         print colored('2. Get details of a user using username', 'yellow')
         print colored('3. Get details of a own recent posts', 'yellow')
         print colored('4. Get details of a user recent posts using username', 'yellow')
+        print colored('5. Get recent media liked byt the user', 'yellow')
+
         print colored('e. Exit\n', 'yellow')
         choice = raw_input(colored('Please select from above options : ', 'green'))
         if choice == '1':
@@ -198,6 +295,10 @@ def start_bot():
         elif choice == '4':
             insta_username = raw_input('Enter the username you want to search : ')
             get_users_post(insta_username)
+            print '\n'
+
+        elif choice == '5':
+            get_recent_media()
             print '\n'
 
         elif choice == 'e':
