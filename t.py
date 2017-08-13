@@ -64,7 +64,6 @@ def get_user_id(insta_username):
     else:
         print "Status code other than 200"
         exit()
-    return user_id
 
 
 #function to get user info
@@ -260,6 +259,90 @@ def get_recent_media():
     return user_info
 
 
+#function to get the post id of a user's recent posts
+
+
+def get_post_id(insta_username):
+
+    '''
+    Check if user exists or not
+    '''
+
+    user_id = get_user_id(insta_username)
+    if user_id == None:
+        print 'User does not exist!'
+        exit()
+
+    '''
+      Make request url
+      Get data through get
+      Read json data through url
+      return json data
+    '''
+
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            return user_media['data'][0]['id']
+        else:
+            print 'There is no recent post of the user!'
+            exit()
+    else:
+        print 'Status code other than 200 received!'
+        exit()
+
+
+#function to like the most recent post of a user
+
+def like_a_post(insta_username):
+
+    '''
+    Get media id
+    make post payload and url
+
+    :param insta_username:
+    :return:
+    '''
+
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/likes') % media_id
+    payload = {"access_token": ACCESS_TOKEN}
+    print 'POST request url : %s' % (request_url)
+    post_a_like = requests.post(request_url, payload).json()
+
+    '''
+    Check if like was succesful or not
+    '''
+
+    if post_a_like['meta']['code'] == 200:
+        print 'Like was successful!'
+    else:
+        print 'Your like was unsuccessful. Try again!'
+
+    '''
+    Function declaration to make a comment on the recent post of the user
+    '''
+
+def post_a_comment(insta_username):
+    '''
+    get media id
+    '''
+    media_id = get_post_id(insta_username)
+    comment_text = raw_input("Enter the comment : ")
+    payload = {"access_token": ACCESS_TOKEN, "text": comment_text}
+    request_url = (BASE_URL + 'media/%s/comments') % media_id
+    print 'POST request url : %s' % request_url
+
+    make_comment = requests.post(request_url, payload).json()
+    if make_comment['meta']['code'] == 200:
+        print "Successfully added a new comment!"
+    else:
+        print "Unable to add comment. Try again!"
+
+
 #function to start insta_bot
 def start_bot():
 
@@ -277,6 +360,9 @@ def start_bot():
         print colored('3. Get details of a own recent posts', 'yellow')
         print colored('4. Get details of a user recent posts using username', 'yellow')
         print colored('5. Get recent media liked byt the user', 'yellow')
+        print colored('6. Like the recent post of a  user', 'yellow')
+        print colored('7. Comment on the recent post of a  user', 'yellow')
+
 
         print colored('e. Exit\n', 'yellow')
         choice = raw_input(colored('Please select from above options : ', 'green'))
@@ -299,6 +385,16 @@ def start_bot():
 
         elif choice == '5':
             get_recent_media()
+            print '\n'
+
+        elif choice == '6':
+            insta_username = raw_input('Enter the username whose recent post you want to like : ')
+            like_a_post(insta_username)
+            print '\n'
+
+        elif choice == '7':
+            insta_username = raw_input('Enter the username whose recent post you want to comment on : ')
+            post_a_comment(insta_username)
             print '\n'
 
         elif choice == 'e':
